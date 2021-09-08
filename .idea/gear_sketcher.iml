@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$USER_HOME$/FreeCAD_19/squashfs-root/usr/lib">
+      <sourceFolder url="file://$USER_HOME$/FreeCAD_19/squashfs-root/usr/lib" isTestSource="false" />
+      <sourceFolder url="file://$USER_HOME$/FreeCAD_19/squashfs-root/usr/lib/python3.8" isTestSource="false" />
+      <sourceFolder url="file://$USER_HOME$/FreeCAD_19/squashfs-root/usr/lib/python3.8/lib-dynload" isTestSource="false" />
+      <sourceFolder url="file://$USER_HOME$/FreeCAD_19/squashfs-root/usr/lib/python3.8/site-packages" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/venv" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="" />
+  </component>
+  <component name="TestRunnerService">
+    <option name="PROJECT_TEST_RUNNER" value="py.test" />
+  </component>
+</module>
