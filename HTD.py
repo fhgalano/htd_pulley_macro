@@ -150,9 +150,7 @@ def create_htd_pulley(active_doc, active_sketch):
 def _arc_too_big(arc_edge, arc_radius):
 	max_arc = 2 * pi * arc_radius * max_arc_percent
 	if arc_edge < max_arc:
-		print(arc_edge,max_arc, " Solid \n")
 		return False
-	print(arc_edge, max_arc, "No Bueno \n")
 	return True
 
 
@@ -171,5 +169,9 @@ polar_array = create_polar_array(gear_sketch)
 # Turn polar array into a new sketch
 polar_sketch = Draft.makeSketch(polar_array, autoconstraints=True)
 polar_sketch.Label = "gear_sketch_" + str(num_teeth) + "_teeth"
+
+# Clean up things that aren't needed anymore
+FreeCAD.getDocument(gear_doc.Name).removeObject(polar_array.Name)
+FreeCAD.getDocument(gear_doc.Name).removeObject(gear_sketch.Name)
 
 FreeCAD.Console.PrintMessage("\nEnd\n")
