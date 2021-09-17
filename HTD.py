@@ -1,16 +1,24 @@
+import os
 import sys
-import FreeCAD
-import FreeCADGui as Gui
-import Draft
 from math import pi
 from time import sleep
 
+import FreeCAD
+import FreeCADGui as Gui
+import Draft
+from PySide import QtGui
+
+
+source_dir = os.path.dirname(__file__)
+helper_dir = os.path.join(source_dir, 'helpers')
 sys.path
-sys.path.append('C:\Development\Pycharm\htd_pulley_macro\helpers')
+sys.path.append(helper_dir)
 
 import helpers.math_helpers as mh
 
 # constants
+# TODO: have num teeth given as an input
+# TODO: have constants defined by HTD 3M/5M/8M etc. possibly from a reference file
 radius_small_arc = 0.43
 radius_large_arc = 1.49
 num_teeth = 12
@@ -173,5 +181,7 @@ polar_sketch.Label = "gear_sketch_" + str(num_teeth) + "_teeth"
 # Clean up things that aren't needed anymore
 FreeCAD.getDocument(gear_doc.Name).removeObject(polar_array.Name)
 FreeCAD.getDocument(gear_doc.Name).removeObject(gear_sketch.Name)
+
+QtGui.QInputDialog.getText(None, "Get text", "Input:")[0]
 
 FreeCAD.Console.PrintMessage("\nEnd\n")
