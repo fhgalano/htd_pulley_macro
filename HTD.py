@@ -161,27 +161,42 @@ def _arc_too_big(arc_edge, arc_radius):
 		return False
 	return True
 
+def main():
+	# make globals editable
+	global num_teeth
+	global pitch
 
-## MAIN ##
-# Create the Gear Tooth
-while True:
-	gear_sketch, gear_doc = create_new_sketch()
-	if create_htd_pulley(gear_doc, gear_sketch):
-		break
+	# Get user inputs for settings
+	input_teeth = QtGui.QInputDialog.getInt(None, "Get Teeth", "Number of Teeth:", value=12)
+	input_pitch = QtGui.QInputDialog.getInt(None, "Get Pitch", "Pitch (mm):", value=5)
 
-	clean_up(gear_doc, gear_sketch)
+	if input_teeth[1] is False or input_pitch[1] is False:
+		FreeCAD.Console.PrintMessage("ERROR: User Cancelled Operation\n")
+		return
+	else:
+		num_teeth = input_teeth[0]
+		pitch = input_pitch[0]
 
-# Polar array of the gear tooth
-polar_array = create_polar_array(gear_sketch)
+	# Create the Gear Tooth
+	while True:
+		gear_sketch, gear_doc = create_new_sketch()
+		if create_htd_pulley(gear_doc, gear_sketch):
+			break
 
-# Turn polar array into a new sketch
-polar_sketch = Draft.makeSketch(polar_array, autoconstraints=True)
-polar_sketch.Label = "gear_sketch_" + str(num_teeth) + "_teeth"
+		clean_up(gear_doc, gear_sketch)
 
-# Clean up things that aren't needed anymore
-FreeCAD.getDocument(gear_doc.Name).removeObject(polar_array.Name)
-FreeCAD.getDocument(gear_doc.Name).removeObject(gear_sketch.Name)
+	# Polar array of the gear tooth
+	polar_array = create_polar_array(gear_sketch)
 
-QtGui.QInputDialog.getText(None, "Get text", "Input:")[0]
+	# Turn polar array into a new sketch
+	polar_sketch = Draft.makeSketch(polar_array, autoconstraints=True)
+	polar_sketch.Label = "gear_sketch_" + str(num_teeth) + "_teeth"
 
-FreeCAD.Console.PrintMessage("\nEnd\n")
+	# Clean up things that aren't needed anymore
+	FreeCAD.getDocument(gear_doc.Name).removeObject(polar_array.Name)
+	FreeCAD.getDocument(gear_doc.Name).removeObject(gear_sketch.Name)
+
+	FreeCAD.Console.PrintMessage("End\n")
+
+if __name__ == "__main__":
+	main()
