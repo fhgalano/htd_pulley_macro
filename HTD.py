@@ -4,10 +4,12 @@ from math import pi
 from time import sleep
 
 import FreeCAD
+import Part
 import FreeCADGui as Gui
 import Draft
 from PySide import QtGui
 
+import importlib
 
 source_dir = os.path.dirname(__file__)
 helper_dir = os.path.join(source_dir, 'helpers')
@@ -15,97 +17,32 @@ sys.path
 sys.path.append(helper_dir)
 
 import helpers.math_helpers as mh
+import helpers.freecad_helpers as fh
+importlib.reload(fh)
 
 # constants
 # TODO: have num teeth given as an input
 # TODO: have constants defined by HTD 3M/5M/8M etc. possibly from a reference file
 radius_small_arc = 0.43
 radius_large_arc = 1.49
-num_teeth = 12
-pitch = 5
 tooth_size = 2.06
-max_arc_percent = 0.35
 
-# freecad helpers
-def get_active_sketch():
-	return FreeCAD.getDocument(FreeCAD.ActiveDocument.Name).getObject(FreeCAD.ActiveDocument.ActiveObject.Name)
-
-
-def create_new_sketch():
-	doc = FreeCAD.ActiveDocument
-	obj = FreeCAD.ActiveDocument.addObject("Sketcher::SketchObject", "GearSketch")
-	return obj, doc
-
-
-def clean_up(doc, sketch):
-	FreeCAD.getDocument(doc.Name).removeObject(sketch.Name)
-	update_drawing()
-
-
-def draw_circle(active_sketch, radius: float, is_construction: bool):
-	circle = active_sketch.addGeometry(Part.Circle(App.Vector(0,0,0), App.Vector(0,0,1), radius), is_construction)
-	update_drawing()
-	return circle
-
-
-def draw_line(active_sketch, start, end, is_construction):
-	line = active_sketch.addGeometry(Part.LineSegment(App.Vector(start[0], start[1], 0), App.Vector(end[0], end[1], 0)), is_construction)
-	update_drawing()
-	return line
-
-
-def draw_arc(active_sketch, center, radius, start_deg, end_deg, is_construction):
-	arc = active_sketch.addGeometry(Part.ArcOfCircle(Part.Circle(App.Vector(center[0], center[1],0), App.Vector(0,0,1), radius), mh.deg_to_rads(start_deg), mh.deg_to_rads(end_deg)), is_construction)
-	update_drawing()
-	return arc
-
-
-def create_arc(active_sketch, is_construction, start_deg, end_deg):
-	arc = active_sketch.addGeometry(Part.ArcOfCircle(Part.Circle(App.Vector(0,0,0), App.Vector(0,0,1), 1), mh.deg_to_rads(start_deg), mh.deg_to_rads(end_deg)), is_construction)
-	return arc
-
-
-def get_edge_size(active_doc, active_sketch, edge):
-	edge_str = 'Edge' + str(int(edge)+1)
-	Gui.Selection.addSelection(str(active_doc.Name), str(active_sketch.Name), edge_str)
-	update_drawing()
-	sleep(0.1)
-	edge_size = Gui.Selection.getSelectionEx()[0].SubObjects[0].Length
-	Gui.Selection.clearSelection()
-	return edge_size
-
-def create_polar_array(sketch):
-	_obj_ = Draft.make_polar_array(
-		sketch,
-		number=num_teeth,
-		angle=360.0,
-		center=FreeCAD.Vector(0.0, 0.0, 0.0),
-		use_link=False)
-	_obj_.Fuse = True
-	Draft.autogroup(_obj_)
-	update_drawing()
-
-	return _obj_
-
-
-def update_drawing():
-	App.ActiveDocument.recompute()
 
 
 # main functions
-def create_htd_pulley(active_doc, active_sketch):
+def create_htd_pulley_tooth(active_doc, active_sketch, num_teeth, pitch):
 
 	# math vars
 	pitch_radius = mh.pitch_diameter(num_teeth, pitch) / 2
 	outer_radius = mh.outside_diameter(pitch_radius * 2) / 2
 
 	# drawing
-	outer_radius_line = draw_line(active_sketch, (0, 0), (25, outer_radius), True)
-	pitch_radius_line = draw_line(active_sketch, (0, 0), (25, pitch_radius), True)
-	mid_tooth_line = draw_line(active_sketch, (0, 0), (25, pitch_radius), True)
-	tooth_flat = draw_arc(active_sketch, App.Vector(0, 0, 0), outer_radius, 85, 90, False)
-	tooth_small_curve = create_arc(active_sketch, False, 20, 90)
-	tooth_large_curve = create_arc(active_sketch, False, -210, -90)
+	outer_radius_line = fh.draw_line(active_sketch, (0, 0), (25, outer_radius), True)
+	pitch_radius_line = fh.draw_line(active_sketch, (0, 0), (25, pitch_radius), True)
+	mid_tooth_line = fh.draw_line(active_sketch, (0, 0), (25, pitch_radius), True)
+	tooth_flat = fh.draw_arc(active_sketch, App.Vector(0, 0, 0), outer_radius, 85, 90, False)
+	tooth_small_curve = fh.create_arc(active_sketch, False, 20, 90)
+	tooth_large_curve = fh.create_arc(active_sketch, False, -210, -90)
 
 	# constraints
 	# od line
@@ -145,57 +82,63 @@ def create_htd_pulley(active_doc, active_sketch):
 	# symmetry
 	mirror_large, mirror_small, mirror_flat = active_sketch.addSymmetric([tooth_large_curve, tooth_small_curve, tooth_flat], mid_tooth_line)
 
-	small_edge_size = get_edge_size(active_doc, active_sketch, tooth_small_curve)
-	large_edge_size = get_edge_size(active_doc, active_sketch, tooth_large_curve)
+	small_edge_size = fh.get_edge_size(active_doc, active_sketch, tooth_small_curve)
+	large_edge_size = fh.get_edge_size(active_doc, active_sketch, tooth_large_curve)
 
-	if not _arc_too_big(small_edge_size, radius_small_arc) \
-			and not _arc_too_big(large_edge_size, radius_large_arc):
+	if not fh.arc_too_big(small_edge_size, radius_small_arc) \
+			and not fh.arc_too_big(large_edge_size, radius_large_arc):
 		return True
 
 	return False
-
-
-def _arc_too_big(arc_edge, arc_radius):
-	max_arc = 2 * pi * arc_radius * max_arc_percent
-	if arc_edge < max_arc:
-		return False
-	return True
-
-def main():
-	# make globals editable
-	global num_teeth
-	global pitch
-
+def get_user_inputs():
 	# Get user inputs for settings
 	input_teeth = QtGui.QInputDialog.getInt(None, "Get Teeth", "Number of Teeth:", value=12)
 	input_pitch = QtGui.QInputDialog.getInt(None, "Get Pitch", "Pitch (mm):", value=5)
 
 	if input_teeth[1] is False or input_pitch[1] is False:
 		FreeCAD.Console.PrintMessage("ERROR: User Cancelled Operation\n")
-		return
+		raise Exception("User Cancelled Operation")
 	else:
 		num_teeth = input_teeth[0]
 		pitch = input_pitch[0]
 
-	# Create the Gear Tooth
+	return num_teeth, pitch
+
+
+def create_gear_tooth(num_teeth, pitch):
 	while True:
-		gear_sketch, gear_doc = create_new_sketch()
-		if create_htd_pulley(gear_doc, gear_sketch):
+		sketch, doc = fh.create_new_sketch()
+		if create_htd_pulley_tooth(doc, sketch, num_teeth, pitch):
 			break
 
-		clean_up(gear_doc, gear_sketch)
+		fh.clean_up(doc, sketch)
 
+	return doc, sketch
+
+
+def gear_tooth_revolve(doc, sketch, teeth):
 	# Polar array of the gear tooth
-	polar_array = create_polar_array(gear_sketch)
+	polar_array = fh.create_polar_array(sketch, teeth)
 
 	# Turn polar array into a new sketch
 	polar_sketch = Draft.makeSketch(polar_array, autoconstraints=True)
-	polar_sketch.Label = "gear_sketch_" + str(num_teeth) + "_teeth"
+	polar_sketch.Label = "gear_sketch_" + str(teeth) + "_teeth"
 
-	# Clean up things that aren't needed anymore
-	FreeCAD.getDocument(gear_doc.Name).removeObject(polar_array.Name)
-	FreeCAD.getDocument(gear_doc.Name).removeObject(gear_sketch.Name)
+	FreeCAD.getDocument(doc.Name).removeObject(polar_array.Name)
 
+
+def main():
+	# inputs
+	num_teeth, pitch = get_user_inputs()
+
+	# create gear
+	gear_doc, tooth_sketch = create_gear_tooth(num_teeth, pitch)
+	gear_tooth_revolve(gear_doc, tooth_sketch, num_teeth)
+
+	# clean up
+	FreeCAD.getDocument(gear_doc.Name).removeObject(tooth_sketch.Name)
+
+	# end
 	FreeCAD.Console.PrintMessage("End\n")
 
 if __name__ == "__main__":
