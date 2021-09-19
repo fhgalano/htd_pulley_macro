@@ -11,8 +11,8 @@ from PySide import QtGui
 import math_helpers as mh
 
 # constants
-
 max_arc_percent = 0.35
+
 
 def update_drawing():
     FreeCAD.ActiveDocument.recompute()
@@ -46,8 +46,6 @@ def draw_circle(active_sketch, radius: float, is_construction: bool):
 
 
 def draw_line(active_sketch, start, end, is_construction):
-    print("hi\n")
-    get_working_dir()
     line = active_sketch.addGeometry(Part.LineSegment(FreeCAD.Vector(start[0], start[1], 0), FreeCAD.Vector(end[0], end[1], 0)), is_construction)
     update_drawing()
     return line
