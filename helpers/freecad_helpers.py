@@ -1,7 +1,7 @@
 import os
 import sys
 from time import sleep
-from math import pi
+from math import pi, floor
 
 import FreeCAD
 import Part
@@ -13,6 +13,10 @@ import math_helpers as mh
 # constants
 max_arc_percent = 0.35
 
+def get_version():
+    full_version = FreeCAD.Version()
+    base_version = floor(float(full_version[1]))
+    return base_version
 
 def update_drawing():
     FreeCAD.ActiveDocument.recompute()
@@ -63,13 +67,10 @@ def create_arc(active_sketch, is_construction, start_deg, end_deg):
 
 
 def get_edge_size(active_doc, active_sketch, edge):
-    edge_str = 'Edge' + str(int(edge)+1)
-    Gui.Selection.addSelection(str(active_doc.Name), str(active_sketch.Name), edge_str)
-    update_drawing()
-    sleep(0.1)
-    edge_size = Gui.Selection.getSelectionEx()[0].SubObjects[0].Length
-    Gui.Selection.clearSelection()
-    return edge_size
+    obj = FreeCAD.getDocument(active_doc.Name).getObject(active_sketch.Name)
+    line = obj.Geometry[edge]
+    edge_length = line.length()
+    return edge_length
 
 def create_polar_array(sketch, num_teeth):
     _obj_ = Draft.make_polar_array(

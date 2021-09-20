@@ -13,6 +13,8 @@ import Sketcher
 
 import helpers.freecad_helpers as fh
 import helpers.math_helpers as mh
+importlib.reload(fh)
+importlib.reload(mh)
 
 pitch_map = {
     "5M": {
@@ -30,15 +32,19 @@ class HTD:
         self.profile = profile
         self.attributes = pitch_map[profile]
 
-
     def create_gear(self):
+        # version selection
+        freecad_version = fh.get_version()
+
         # create gear
         gear_doc, tooth_sketch = self.create_gear_tooth()
-        self.gear_tooth_revolve(gear_doc, tooth_sketch)
+        if freecad_version == 18:
+            self.gear_tooth_revolve_old(gear_doc, tooth_sketch)
+        elif freecad_version == 19:
+            self.gear_tooth_revolve(gear_doc, tooth_sketch)
 
         # clean up
         FreeCAD.getDocument(gear_doc.Name).removeObject(tooth_sketch.Name)
-
 
     def create_htd_pulley_tooth(self, active_doc, active_sketch):
 
@@ -76,7 +82,6 @@ class HTD:
         active_sketch.addConstraint(Sketcher.Constraint('Coincident', tooth_flat, 3, -1, 1))
         active_sketch.addConstraint(Sketcher.Constraint('Coincident', tooth_flat, 2, outer_radius_line, 2))
 
-
         # small curve
         active_sketch.addConstraint(Sketcher.Constraint('Radius', tooth_small_curve, self.attributes['radius_small_arc']))
         # active.addConstraint(Sketcher.Constraint('Coincident', tooth_flat, 1, tooth_small_curve, 2))
@@ -101,7 +106,6 @@ class HTD:
 
         return False
 
-
     def gear_tooth_revolve(self, doc, sketch):
         # Polar array of the gear tooth
         polar_array = fh.create_polar_array(sketch, self.num_teeth)
@@ -112,6 +116,17 @@ class HTD:
 
         FreeCAD.getDocument(doc.Name).removeObject(polar_array.Name)
 
+    def gear_tooth_revolve_old(self, doc, sketch):
+        array = Draft.makeArray(sketch,FreeCAD.Vector(1,0,0),FreeCAD.Vector(0,1,0),1,1)
+        array.ArrayType = u"polar"
+        array.Fuse = True
+        array.NumberPolar = self.num_teeth
+        fh.update_drawing()
+
+        polar_sketch = Draft.makeSketch(array, autoconstraints=True)
+        polar_sketch.Label = "gear_sketch_" + str(self.num_teeth) + "_teeth"
+
+        FreeCAD.getDocument(doc.Name).removeObject(array.Name)
 
     def create_gear_tooth(self):
         while True:
