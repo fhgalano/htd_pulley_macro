@@ -1,35 +1,10 @@
-<<<<<<< HEAD
-import FreeCAD
-
-
-def setup_test_env():
-    FreeCAD.openDocument('/home/fidel/FreeCAD/testing_grounds.FCStd')
-
-
-def get_active_sketch():
-    return FreeCAD.getDocument(FreeCAD.ActiveDocument.Name).getObject(FreeCAD.ActiveDocument.ActiveObject.Name)
-
-
-def draw_circle(active_sketch, radius: float, is_construction: bool):
-    active_sketch.addGeometry(Part.Circle(App.Vector(0,0,0), App.Vector(0,0,1), radius), is_construction)
-    update_drawing()
-
-
-def update_drawing():
-    App.ActiveDocument.recompute()
-
-setup_test_env()
-act = get_active_sketch()
-print(act.Name)
-draw_circle(act, 100.0, True)
-update_drawing()
-=======
 import sys
 
 sys.path
 sys.path.append("C:\\Users\\fhgal\\AppData\\Local\\Programs\\FreeCAD 0.19\\bin")
 
 import FreeCAD
+import Part
 
 def get_active_sketch():
 	return FreeCAD.getDocument(FreeCAD.ActiveDocument.Name).getObject(FreeCAD.ActiveDocument.ActiveObject.Name)
@@ -54,4 +29,3 @@ def draw_arc(active_sketch, center, radius, start_deg, end_deg, is_construction)
 
 def update_drawing():
 	App.ActiveDocument.recompute()
->>>>>>> 55390a480180ac8f542d8863ca583682e181dfdb
