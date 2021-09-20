@@ -13,10 +13,12 @@ import math_helpers as mh
 # constants
 max_arc_percent = 0.35
 
+
 def get_version():
     full_version = FreeCAD.Version()
     base_version = floor(float(full_version[1]))
     return base_version
+
 
 def update_drawing():
     FreeCAD.ActiveDocument.recompute()
@@ -26,6 +28,7 @@ def update_drawing():
 def get_working_dir():
     print(os.getcwd())
     return
+
 
 # freecad helpers
 def get_active_sketch():
@@ -62,7 +65,7 @@ def draw_arc(active_sketch, center, radius, start_deg, end_deg, is_construction)
 
 
 def create_arc(active_sketch, is_construction, start_deg, end_deg):
-    arc = active_sketch.addGeometry(Part.ArcOfCircle(Part.Circle(FreeCAD.Vector(0,0,0), FreeCAD.Vector(0,0,1), 1), mh.deg_to_rads(start_deg), mh.deg_to_rads(end_deg)), is_construction)
+    arc = active_sketch.addGeometry(Part.ArcOfCircle(Part.Circle(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(0, 0, 1), 1), mh.deg_to_rads(start_deg), mh.deg_to_rads(end_deg)), is_construction)
     return arc
 
 
@@ -71,6 +74,7 @@ def get_edge_size(active_doc, active_sketch, edge):
     line = obj.Geometry[edge]
     edge_length = line.length()
     return edge_length
+
 
 def create_polar_array(sketch, num_teeth):
     _obj_ = Draft.make_polar_array(
